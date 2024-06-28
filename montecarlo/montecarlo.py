@@ -1,9 +1,9 @@
 class Die:
-    def __init__(self, faces):
+    def __init__():
         pass
 
 class Game:
-    def __init__(self, dice):
+    def __init__():
         pass
 
 class Analyzer:
