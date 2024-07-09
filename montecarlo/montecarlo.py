@@ -2,7 +2,15 @@ import numpy as np
 import pandas as pd
 
 class Die:
+    ''' Initialize an N-sided die with weights that is meant to be rolled one or more times '''
     def __init__(self, faces):
+        '''
+        Creates the Die instance. Takes in an array of distnct die faces and initializes all their weights to 1
+        
+        INPUTS
+        faces : NumPy array of strings, integers, or floats
+        '''
+        
         if type(faces) != np.ndarray:
             raise TypeError('Input must be a NumPy array')
 
@@ -17,9 +25,18 @@ class Die:
         }).set_index('faces')
 
     def change_weight(self, face, new_weight):
+        '''
+        Changes the weight of a single side of the dice
+        
+        INPUTS
+        face : string, integer, or float
+            the face value to be changed, must be in the die darray
+        new_weight : integer, float, or numeric string
+            the new weight of the passed face on the die
+        '''
+        
         if face not in self._die_df.index:
             raise IndexError('Face passed must be a valid value')
-    ## What about boolean???
         if type(new_weight) == str:
             if new_weight.isnumeric() == False:
                 raise TypeError('String must be castable as numeric')
@@ -28,33 +45,130 @@ class Die:
         else:
             self._die_df.loc[face] = new_weight
 
-    def roll_die(self, n=1):
-        outcomes = []
-        probs = self._die_df.weights / sum(self._die_df.weights)
-        for i in range(n):
-            outcome = np.random.choice(self._die_df.index.values, p = probs)
-            outcomes.append(outcome)
-        return outcomes
+    def roll_die(self, rolls=1):
+        '''
+        Rolls the dice one or more times. Returns a list of the faces that the die rolled on
+        
+        INPUTS
+        rolls : positive int
+            number of times the die is to be rolled
+            default: rolls=1
+        
+        OUTPUT
+        list of die faces
+        '''
+        
+        outcomes = self._die_df.faces.sample(n = rolls, replace = True, 
+                                             weights = self._die_df.weights)
+        return list(outcomes)
 
 
     def die_state(self):
+        '''
+        Show the die's current state, with each die face and their corresponding weights
+        
+        OUTPUT
+        pandas dataframe
+        '''
+        
         return self._die_df.copy()
         
 
 class Game:
+    ''' Collection of dice with the purpose of rolling them and storing the results of the most recent play'''
     def __init__(self, dice):
+        '''
+        Game initializer
+        
+        INPUTS
+        dice    list of Die objects
+            All Die in the list have the same faces
+    
         self.dice = dice
+        '''
 
     def play(self, n):
-        self._result = pd.DataFrame()
-        for die in self.dice:
-            self._result[die.index] = die.roll_die(n)
-        self._result.index.name = "roll_number"
-            
+        '''
+       Rolls the dice a specified amount of times using the Die methods and stores them in a private dataframe
+        
+        INPUTS
+        n : number of times to roll the dice
+        '''
+        
+        result = pd.DataFrame()
+        result.index.name = "roll_number"
+        for i in range(0, len(self.dice)):
+            result[i] = self.dice[i].roll_die(n)
+        self._result = result
+
+    def return_result(self, wide=True):
+        '''
+        Shows the results of the most recent play
+        
+        INPUTS
+        wide : bool
+            Whether the outputted dataframe should be in narrow or wide format
+            Default: wide=True
+        
+        OUTPUT
+        pandas dataframe of the roll results, in narrow or wide form
+        '''
+        
+        if type(wide) != bool:
+            raise ValueError('Must pass True or False for wide format')
+        if wide == False:
+            result_narrow = self._result.stack().to_frame('outcome')
+            result_narrow.index.names = ['roll_number', 'die_number']
+            return result_narrow.copy()
+        return self._result.copy()
+        
+        
+        
+class Analyzer:
+    ''' Takes the results of a Game object and computes properties and statistics of the game '''
+    def __init__(self, game):
+        '''
+        Initializes Analyzer class
+        
+        INPUTS
+        game    Game object
+        '''
+    
+        if type(game) != Game:
+            raise ValueError('Input must be a Game object')
+        self.game = game
+        
+    def jackpot(self):
+        '''
+        Calculates number of instances where all faces are the same in a single roll, AKA a jackpot
+
+        OUTPUT
+        num_jackpot : int
+        '''
+        
+        num_jackpot = 0
+        results = self.game.return_result()
+        for i in range(0, len(results)):
+            result_row = results.iloc[i]
+            if len(np.unique(result_row)) == 1:
+                num_jackpot += 1
+        return num_jackpot
+
+    def face_counts(self):
+        '''
+        Computes how many times each face is rolled for each singular roll
+        
+        
+        OUTPUT
+        results : pandas dataframe of counts for each roll
+        '''
+        results = self.game.return_result()
+        count_result = results.iloc[0].value_counts()
+        counts = pd.DataFrame([count_result])
+        for i in range(1, len(results)):
+            print(results.iloc[i].value_counts().to_frame())
+
+
+    def combo_count(self):
         
 
-class Analyzer:
-    def __init__(self, game):
-        if type(game) != Game:
-            raise TypeError('Input must be a Game object')
-        self.game = game
