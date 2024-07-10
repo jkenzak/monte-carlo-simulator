@@ -45,22 +45,25 @@ class Die:
         else:
             self._die_df.loc[face] = new_weight
 
-    def roll_die(self, rolls=1):
+    def roll_die(self, n=1):
         '''
         Rolls the dice one or more times. Returns a list of the faces that the die rolled on
         
         INPUTS
-        rolls : positive int
+        n : positive int
             number of times the die is to be rolled
-            default: rolls=1
+            default: n=1
         
         OUTPUT
         list of die faces
         '''
         
-        outcomes = self._die_df.faces.sample(n = rolls, replace = True, 
-                                             weights = self._die_df.weights)
-        return list(outcomes)
+        outcomes = []
+        probs = self._die_df.weights / sum(self._die_df.weights)
+        for i in range(n):
+            outcome = np.random.choice(self._die_df.index.values, p = probs)
+            outcomes.append(outcome)
+        return outcomes
 
 
     def die_state(self):
@@ -83,9 +86,9 @@ class Game:
         INPUTS
         dice    list of Die objects
             All Die in the list have the same faces
-    
-        self.dice = dice
         '''
+        
+        self.dice = dice
 
     def play(self, n):
         '''
@@ -163,12 +166,45 @@ class Analyzer:
         results : pandas dataframe of counts for each roll
         '''
         results = self.game.return_result()
-        count_result = results.iloc[0].value_counts()
-        counts = pd.DataFrame([count_result])
-        for i in range(1, len(results)):
-            print(results.iloc[i].value_counts().to_frame())
+        faces = self.game.dice[0].die_state().index.values
+        counts = pd.DataFrame(0, columns = faces, index = results.index)
+        for i in range(0, len(results)):
+            for j in results.columns:
+                face_val = results.loc[i,j]
+                counts.loc[(i, face_val)] += 1
 
+        print(counts)
 
     def combo_count(self):
-        
+        '''
+        Calculates the distinct combinations of faces rolled, in no particular order
 
+        OUTPUT
+        combos : pandas dataframe containing all of the combinations and their counts
+        '''
+        results = self.game.return_result()
+        combinations = []
+        for i in range(0, len(results)):
+            permutation = results.iloc[i].sort_values()
+            combinations.append(tuple(permutation))
+        combos = pd.Series(combinations).value_counts().to_frame()
+        index = pd.MultiIndex.from_tuples(combos.index.values)
+        combos = combos.set_index(index)
+        return combos
+
+    def permutation_count(self):
+        '''
+        Calculates the distinct, order-dependent permutations of faces rolled
+
+        OUTPUT
+        combos : pandas dataframe containing all of the permutations and their counts
+        '''
+        results = self.game.return_result()
+        combinations = []
+        for i in range(0, len(results)):
+            permutation = results.iloc[i]
+            combinations.append(tuple(permutation))
+        perms = pd.Series(combinations).value_counts().to_frame()
+        index = pd.MultiIndex.from_tuples(perms.index.values)
+        perms = perms.set_index(index)
+        return perms
