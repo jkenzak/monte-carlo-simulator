@@ -163,7 +163,7 @@ class Analyzer:
         
         
         OUTPUT
-        results : pandas dataframe of counts for each roll
+        counts : pandas dataframe of counts for each roll
         '''
         results = self.game.return_result()
         faces = self.game.dice[0].die_state().index.values
@@ -173,7 +173,7 @@ class Analyzer:
                 face_val = results.loc[i,j]
                 counts.loc[(i, face_val)] += 1
 
-        print(counts)
+        return counts
 
     def combo_count(self):
         '''
@@ -197,7 +197,7 @@ class Analyzer:
         Calculates the distinct, order-dependent permutations of faces rolled
 
         OUTPUT
-        combos : pandas dataframe containing all of the permutations and their counts
+        perms : pandas dataframe containing all of the permutations and their counts
         '''
         results = self.game.return_result()
         combinations = []
