@@ -34,3 +34,20 @@ From here, you would be able to call the return_result() function under the game
 
 ## API Description
 
+### Class 'Die'
+
+#### Die(faces)
+
+Takes in a NumPy array of distinct values, `faces`, that would serve as the representation of each side of the 'die' object. Initializes the Die with each side having an equal weight of 1
+
+#### Die.change_weight(face, new_weight)
+
+Takes in `face`, which is the face of the side that you want to change the weight of and then `new_weight` is the weight value that would replace the new one. This must be a numeric value or a numeric string. It changes the value within the Die instance and doesn't return anything
+
+#### Die.roll_die(n=1)
+
+Rolls the die one or more times in accordance with the corresponding weights. `n` must be a positive int and if no arguments are passed it defaults to 1. It will output a list of length `n` that shows the faces that each roll landed on
+
+#### Die.die_state()
+
+Shows the current Die's attributes by returning a pandas DataFrame that shows each die face and their corresponding weights
