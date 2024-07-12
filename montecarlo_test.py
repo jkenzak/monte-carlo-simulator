@@ -11,7 +11,7 @@ class TestDieMethods(unittest.TestCase):
     def test_change_weight(self):
         die1 = Die(np.array(['H', 'T']))
         die1.change_weight('H', 5)
-        statement = die1._die_df.loc['H'].values
+        statement = die1.die_state().loc['H'].values
         self.assertEqual(statement, 5)
 
     def test_roll_die(self):
